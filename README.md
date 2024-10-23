@@ -7,5 +7,9 @@ javaScrip, node js, Express, MogoDB
 1.cd shorturl-black 
 2.npm install
 
+## Set up
+- Check the port your application is using http://localhost:5000
+
 ## Run Project
 npm run devStart
+
