@@ -21,20 +21,24 @@ app.set("trust proxy", true);
 app.get("/", async (req, res) => {
   try {
     const shortUrls = await ShortUrl.find().sort({ createdAt: -1 });
+    const userIP = req.ip;
     console.log("Found URLs:", shortUrls);
-    res.render("../views/index", { shortUrls: shortUrls });
+    console.log("User IP:", userIP);
+
+    res.render("../views/index", { shortUrls: shortUrls, userIP: userIP }); 
   } catch (error) {
     console.error("Error fetching URLs:", error);
-    res.render("../view/index", { shortUrls: [] });
+    res.render("../views/index", { shortUrls: [], userIP: null });
   }
 });
 
 // 2. Route สำหรับสร้าง short URL
 app.post("/shortUrls", async (req, res) => {
   const { fullUrl } = req.body;
+  const userIP = req.ip; 
   try {
     console.log("Received full URL:", fullUrl);
-    await ShortUrl.create({ full: fullUrl });
+    await ShortUrl.create({ full: fullUrl, userIp: userIP }); 
     res.status(200).redirect("/");
   } catch (error) {
     console.error("Error creating short URL:", error);

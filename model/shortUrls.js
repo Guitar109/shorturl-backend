@@ -15,6 +15,10 @@ const shortUrlsSchema = new mongoose.Schema({
     type: Number,
     required: true,
     default: 0
+  },
+  userIp: {
+    type: String,
+    required: true
   }
 });
 
