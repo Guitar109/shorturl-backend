@@ -5,19 +5,22 @@ const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.set("view engine", "ejs");
+app.set("trust proxy", true);
 
+// MongoDB Connection
 mongoose
   .connect(`${process.env.DATABASE_URL}`)
   .then(() => console.log("Connected to MongoDB..."))
   .catch((err) => console.error("Could not connect to MongoDB...", err));
 
-app.set("view engine", "ejs");
-app.set("trust proxy", true);
-
-// 1. Route แสดงหน้าหลัก
+// Routes
+// 1. Home page route
 app.get("/", async (req, res) => {
   try {
     const userIP = req.ip;
@@ -33,7 +36,7 @@ app.get("/", async (req, res) => {
   }
 });
 
-// 2. Route สำหรับสร้าง short URL
+// 2. Create short URL route
 app.post("/shortUrls", async (req, res) => {
   const { fullUrl } = req.body;
   const userIP = req.ip;
@@ -47,7 +50,7 @@ app.post("/shortUrls", async (req, res) => {
   }
 });
 
-//3. route สำหรับลบข้อมูลเเยก
+// 3. Delete single URL route
 app.get("/delete/:shortUrl", async (req, res) => {
   try {
     await ShortUrl.findOneAndDelete({ shortUrl: req.params.shortUrl });
@@ -59,7 +62,7 @@ app.get("/delete/:shortUrl", async (req, res) => {
   }
 });
 
-// 3. Route สำหรับลบข้อมูลทั้งหมด
+// 4. Delete all URLs route
 app.get("/delete-all", async (req, res) => {
   try {
     await ShortUrl.deleteMany({});
@@ -71,13 +74,13 @@ app.get("/delete-all", async (req, res) => {
   }
 });
 
-// 4. Route สำหรับรับ IP
+// 5. Get user IP route
 app.get("/userIp", (req, res) => {
   const userIP = req.ip;
   res.send(`Your IP address is ${userIP}`);
 });
 
-// 5. Route สำหรับ redirect
+// 6. Redirect route
 app.get("/:shortUrl", async (req, res) => {
   try {
     const shortUrl = await ShortUrl.findOne({ shortUrl: req.params.shortUrl });
@@ -91,5 +94,8 @@ app.get("/:shortUrl", async (req, res) => {
   }
 });
 
-//start severที่Port 5000
-app.listen(process.env.PORT || 5000);
+// Start server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
