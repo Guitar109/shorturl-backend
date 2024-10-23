@@ -62,11 +62,12 @@ app.get("/delete/:shortUrl", async (req, res) => {
   }
 });
 
-// 4. Delete all URLs route
+// 3. Route delete by user IP
 app.get("/delete-all", async (req, res) => {
+  const userIP = req.ip; 
   try {
-    await ShortUrl.deleteMany({});
-    console.log("All records deleted");
+    const result = await ShortUrl.deleteMany({ userIp: userIP }); 
+    console.log(`${result.deletedCount} records deleted for IP: ${userIP}`);
     res.redirect("/");
   } catch (error) {
     console.error("Error deleting records:", error);
