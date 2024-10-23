@@ -1,18 +1,18 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const ShortUrl = require("./model/shortUrls");
-const cors = require('cors'); 
-require('dotenv').config();
+const cors = require("cors");
+require("dotenv").config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
-mongoose.connect(`${process.env.DATABASE_URL}`)
-  .then(() => console.log('Connected to MongoDB...'))
-  .catch(err => console.error('Could not connect to MongoDB...', err));
+mongoose
+  .connect(`${process.env.DATABASE_URL}`)
+  .then(() => console.log("Connected to MongoDB..."))
+  .catch((err) => console.error("Could not connect to MongoDB...", err));
 
 app.set("view engine", "ejs");
 app.set("trust proxy", true);
@@ -20,11 +20,13 @@ app.set("trust proxy", true);
 // 1. Route แสดงหน้าหลัก
 app.get("/", async (req, res) => {
   try {
-    const shortUrls = await ShortUrl.find().sort({ createdAt: -1 });
     const userIP = req.ip;
+    const shortUrls = await ShortUrl.find({ userIp: userIP }).sort({
+      createdAt: -1,
+    }); // ดึงข้อมูลตาม userIp
     console.log("Found URLs:", shortUrls);
     console.log("User IP:", userIP);
-    res.render("../views/index", { shortUrls: shortUrls, userIP: userIP }); 
+    res.render("../views/index", { shortUrls: shortUrls, userIP: userIP });
   } catch (error) {
     console.error("Error fetching URLs:", error);
     res.render("../views/index", { shortUrls: [], userIP: null });
@@ -34,10 +36,10 @@ app.get("/", async (req, res) => {
 // 2. Route สำหรับสร้าง short URL
 app.post("/shortUrls", async (req, res) => {
   const { fullUrl } = req.body;
-  const userIP = req.ip; 
+  const userIP = req.ip;
   try {
     console.log("Received full URL:", fullUrl);
-    await ShortUrl.create({ full: fullUrl, userIp: userIP }); 
+    await ShortUrl.create({ full: fullUrl, userIp: userIP });
     res.status(200).redirect("/");
   } catch (error) {
     console.error("Error creating short URL:", error);
@@ -58,7 +60,7 @@ app.get("/delete/:shortUrl", async (req, res) => {
 });
 
 // 3. Route สำหรับลบข้อมูลทั้งหมด
-app.get("/delete-all", async (req, res) => { 
+app.get("/delete-all", async (req, res) => {
   try {
     await ShortUrl.deleteMany({});
     console.log("All records deleted");
@@ -75,8 +77,8 @@ app.get("/userIp", (req, res) => {
   res.send(`Your IP address is ${userIP}`);
 });
 
-// 5. Route สำหรับ redirect 
-app.get('/:shortUrl', async (req, res) => {
+// 5. Route สำหรับ redirect
+app.get("/:shortUrl", async (req, res) => {
   try {
     const shortUrl = await ShortUrl.findOne({ shortUrl: req.params.shortUrl });
     if (shortUrl == null) return res.sendStatus(404);
