@@ -13,3 +13,5 @@ javaScrip, node js, Express, MogoDB
 ## Run Project
 npm run devStart
 
+## Link Server Test Running
+https://shorturl-backend-production.up.railway.app/
