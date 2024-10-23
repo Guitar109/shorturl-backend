@@ -24,7 +24,6 @@ app.get("/", async (req, res) => {
     const userIP = req.ip;
     console.log("Found URLs:", shortUrls);
     console.log("User IP:", userIP);
-
     res.render("../views/index", { shortUrls: shortUrls, userIP: userIP }); 
   } catch (error) {
     console.error("Error fetching URLs:", error);
