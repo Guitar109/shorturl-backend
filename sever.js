@@ -23,7 +23,7 @@ app.get("/", async (req, res) => {
     const userIP = req.ip;
     const shortUrls = await ShortUrl.find({ userIp: userIP }).sort({
       createdAt: -1,
-    }); // ดึงข้อมูลตาม userIp
+    });
     console.log("Found URLs:", shortUrls);
     console.log("User IP:", userIP);
     res.render("../views/index", { shortUrls: shortUrls, userIP: userIP });
