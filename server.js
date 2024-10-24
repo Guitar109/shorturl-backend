@@ -13,13 +13,21 @@ app.use(express.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 app.set("trust proxy", true);
 
+const PRODUCTION_URL = "https://shorturl-backend-production.up.railway.app";
+const SHORT_DOMAIN = "shorturl";
+
+app.use((req, res, next) => {
+  res.locals.formatUrl = (shortUrl) => `${SHORT_DOMAIN}/${shortUrl}`;
+  res.locals.getRedirectUrl = (shortUrl) => `${PRODUCTION_URL}/${shortUrl}`;
+  next();
+});
+
 // MongoDB Connection
 mongoose
   .connect(`${process.env.DATABASE_URL}`)
   .then(() => console.log("Connected to MongoDB..."))
   .catch((err) => console.error("Could not connect to MongoDB...", err));
 
-// Routes
 // 1. Home page route
 app.get("/", async (req, res) => {
   try {
@@ -29,10 +37,20 @@ app.get("/", async (req, res) => {
     });
     console.log("Found URLs:", shortUrls);
     console.log("User IP:", userIP);
-    res.render("../views/index", { shortUrls: shortUrls, userIP: userIP });
+    res.render("../views/index", { 
+      shortUrls: shortUrls, 
+      userIP: userIP,
+      formatUrl: res.locals.formatUrl,
+      getRedirectUrl: res.locals.getRedirectUrl
+    });
   } catch (error) {
     console.error("Error fetching URLs:", error);
-    res.render("../views/index", { shortUrls: [], userIP: null });
+    res.render("../views/index", { 
+      shortUrls: [], 
+      userIP: null,
+      formatUrl: res.locals.formatUrl,
+      getRedirectUrl: res.locals.getRedirectUrl
+    });
   }
 });
 
@@ -42,8 +60,11 @@ app.post("/shortUrls", async (req, res) => {
   const userIP = req.ip;
   try {
     console.log("Received full URL:", fullUrl);
-    await ShortUrl.create({ full: fullUrl, userIp: userIP });
-    res.status(200).redirect("/");
+    const newUrl = await ShortUrl.create({ full: fullUrl, userIp: userIP });
+    res.status(200).json({
+      shortUrl: res.locals.formatUrl(newUrl.shortUrl),
+      redirectUrl: res.locals.getRedirectUrl(newUrl.shortUrl)
+    });
   } catch (error) {
     console.error("Error creating short URL:", error);
     res.status(500).send("Internal Server Error");
@@ -92,6 +113,22 @@ app.get("/:shortUrl", async (req, res) => {
   } catch (error) {
     console.error("Error redirecting:", error);
     res.status(500).send("Internal Server Error");
+  }
+});
+
+app.get("/api/url/:shortUrl", async (req, res) => {
+  try {
+    const shortUrl = await ShortUrl.findOne({ shortUrl: req.params.shortUrl });
+    if (!shortUrl) return res.status(404).json({ error: "URL not found" });
+    
+    res.json({
+      shortUrl: res.locals.formatUrl(shortUrl.shortUrl),
+      redirectUrl: res.locals.getRedirectUrl(shortUrl.shortUrl),
+      originalUrl: shortUrl.full,
+      clicks: shortUrl.clicks
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
